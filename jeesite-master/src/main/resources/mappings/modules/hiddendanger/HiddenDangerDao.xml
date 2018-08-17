@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.hiddendanger.dao.HiddenDangerDao">
+    
+	<sql id="hiddenDangerColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.sort AS "sort",
+		a.parent_id AS "parentId",
+		a.grade AS "grade",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag"
+	</sql>
+	
+	<sql id="hiddenDangerJoins">
+	</sql>
+    
+	<select id="get" resultType="HiddenDanger">
+		SELECT 
+			<include refid="hiddenDangerColumns"/>
+		FROM hidden_danger a
+		<include refid="hiddenDangerJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="HiddenDanger">
+		SELECT 
+			<include refid="hiddenDangerColumns"/>
+		FROM hidden_danger a
+		<include refid="hiddenDangerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="name != null and name != ''">
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<if test="parentId != null and parentId != ''">
+				AND a.parent_id = #{parentId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.sort ASC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findChildList" resultType="HiddenDanger">
+		SELECT 
+			<include refid="hiddenDangerColumns"/>
+		FROM hidden_danger a
+		<include refid="hiddenDangerJoins"/>
+		<where>
+			a.del_flag = '0' AND parent_id != '0'
+		</where>	
+		ORDER BY a.sort ASC	
+	</select>
+	
+	<select id="findAllList" resultType="HiddenDanger">
+		SELECT 
+			<include refid="hiddenDangerColumns"/>
+		FROM hidden_danger a
+		<include refid="hiddenDangerJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO hidden_danger(
+			id,
+			name,
+			sort,
+			parent_id,
+			grade,
+			create_date,
+			create_by,
+			update_by,
+			update_date,
+			del_flag
+		) VALUES (
+			#{id},
+			#{name},
+			#{sort},
+			#{parentId},
+			#{grade},
+			#{createDate},
+			#{createBy.id},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE hidden_danger SET 	
+			name = #{name},
+			sort = #{sort},
+			parent_id = #{parentId}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE hidden_danger SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

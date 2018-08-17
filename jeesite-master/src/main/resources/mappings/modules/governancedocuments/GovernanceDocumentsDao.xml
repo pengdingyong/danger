@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.governancedocuments.dao.GovernanceDocumentsDao">
+    
+	<sql id="governanceDocumentsColumns">
+		a.id AS "id",
+		a.danger_bank_id AS "dangerBankId",
+		a.name AS "name",
+		a.type AS "type"
+	</sql>
+	
+	<sql id="governanceDocumentsJoins">
+	</sql>
+    
+	<select id="get" resultType="GovernanceDocuments">
+		SELECT 
+			<include refid="governanceDocumentsColumns"/>
+		FROM governance_documents a
+		<include refid="governanceDocumentsJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="getContentById" resultType="GovernanceDocuments">
+		SELECT 
+			a.content
+		FROM governance_documents a
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="GovernanceDocuments">
+		SELECT 
+			<include refid="governanceDocumentsColumns"/>
+		FROM governance_documents a
+		<include refid="governanceDocumentsJoins"/>
+		<where>
+			<if test="dangerBankId != null and dangerBankId != ''">
+				AND a.danger_bank_id = #{dangerBankId}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="GovernanceDocuments">
+		SELECT 
+			<include refid="governanceDocumentsColumns"/>
+		FROM governance_documents a
+		<include refid="governanceDocumentsJoins"/>
+		<where>
+			
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO governance_documents(
+			id,
+			danger_bank_id,
+			name,
+			type,
+			content
+		) VALUES (
+			#{id},
+			#{dangerBankId},
+			#{name},
+			#{type},
+			#{content}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE governance_documents SET 	
+			danger_bank_id = #{dangerBankId},
+			name = #{name},
+			type = #{type},
+			content = #{content}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		DELETE FROM governance_documents
+		WHERE id = #{id}
+	</update>
+	
+	<update id="deleteByDangerBankId">
+		DELETE FROM governance_documents
+		WHERE danger_bank_id = #{dangerBankId}
+	</update>
+	
+</mapper>

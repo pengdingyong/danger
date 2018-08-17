@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.dangerbank.dao.DangerBankDao">
+    
+	<sql id="dangerBankColumns">
+		a.id AS "id",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.company_id AS "company.id",
+		a.code AS "code",
+		a.name AS "name",
+		a.source AS "source",
+		a.professional_id AS "professional.id",
+		a.find_time AS "findTime",
+		a.hidden_danger_parent_id AS "hiddenDangerParent.id",
+		a.hidden_danger_id AS "hiddenDanger.id",
+		a.danger_position AS "dangerPosition",
+		a.danger_resume AS "dangerResume",
+		a.rating_id AS "rating.id",
+		a.basis_id AS "basis.id",
+		a.corrective AS "corrective",
+		a.person_liable AS "personLiable",
+		a.office_id AS "office.id",
+		a.plan_date AS "planDate",
+		a.complete_date AS "completeDate",
+		a.complete_situation AS "completeSituation",
+		a.un_clear_danger AS "unClearDanger",
+		a.rectification_progress_month AS "rectificationProgressMonth",
+		a.supervisor AS "supervisor",
+		a.remark AS "remark",
+		o20.name AS "office.name",
+		o21.name AS "company.name",
+		b.name AS "basis.name",
+		pro.name AS "professional.name",
+		hd20.name AS "hiddenDangerParent.name",
+		hd21.name AS "hiddenDanger.name",
+		r.name AS "rating.name"
+	</sql>
+	
+	<sql id="dangerBankJoins">
+		LEFT JOIN sys_office o20 ON o20.id = a.office_id
+		LEFT JOIN sys_office o21 ON o21.id = a.company_id
+		LEFT JOIN rating r ON r.id = a.rating_id
+		LEFT JOIN basis b ON b.id = a.basis_id
+		LEFT JOIN professional pro ON pro.id = a.professional_id
+		LEFT JOIN hidden_danger hd20 ON hd20.id = a.hidden_danger_parent_id
+		LEFT JOIN hidden_danger hd21 ON hd21.id = a.hidden_danger_id
+	</sql>
+    
+	<select id="get" resultType="DangerBank">
+		SELECT 
+			<include refid="dangerBankColumns"/>
+		FROM danger_bank a
+		<include refid="dangerBankJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="DangerBank">
+		SELECT 
+			<include refid="dangerBankColumns"/>
+		FROM danger_bank a
+		<include refid="dangerBankJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="company != null and company.id != null and company.id != ''">
+				AND a.company_id = #{company.id}
+			</if>
+			<if test="code != null and code != ''">
+				AND a.code = #{code}
+			</if>
+			<if test="name != null and name != ''">
+				AND a.name like concat('%',#{name},'%')
+			</if>
+			<if test="source != null and source != ''">
+				AND a.source LIKE 
+					<if test="dbName == 'oracle'">'%'||#{source}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{source}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{source},'%')</if>
+			</if>
+			<if test="professional != null and professional.id != null and professional.id != ''">
+				AND a.professional_id = #{professional.id}
+			</if>
+			<if test="beginFindTime != null and beginFindTime != ''">
+				AND a.find_time >= #{beginFindTime}
+			</if>
+			<if test="endFindTime != null and endFindTime != ''">
+				AND #{endFindTime} >= a.find_time   
+			</if>
+			<if test="hiddenDangerParent != null and hiddenDangerParent.id != null and hiddenDangerParent.id != ''">
+				AND a.hidden_danger_parent_id = #{hiddenDangerParent.id}
+			</if>
+			<if test="hiddenDanger != null and hiddenDanger.id != null and hiddenDanger.id != ''">
+				AND a.hidden_danger_id = #{hiddenDanger.id}
+			</if>
+			<if test="dangerPosition != null and dangerPosition != ''">
+				AND a.danger_position LIKE 
+					<if test="dbName == 'oracle'">'%'||#{dangerPosition}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{dangerPosition}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{dangerPosition},'%')</if>
+			</if>
+			<if test="dangerResume != null and dangerResume != ''">
+				AND a.danger_resume LIKE 
+					<if test="dbName == 'oracle'">'%'||#{dangerResume}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{dangerResume}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{dangerResume},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="DangerBank">
+		SELECT 
+			<include refid="dangerBankColumns"/>
+		FROM danger_bank a
+		<include refid="dangerBankJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO danger_bank(
+			id,
+			create_date,
+			create_by,
+			update_by,
+			update_date,
+			del_flag,
+			company_id,
+			code,
+			name,
+			source,
+			professional_id,
+			find_time,
+			hidden_danger_parent_id,
+			hidden_danger_id,
+			danger_position,
+			danger_resume,
+			rating_id,
+			basis_id,
+			corrective,
+			person_liable,
+			office_id,
+			plan_date,
+			complete_date,
+			complete_situation,
+			un_clear_danger,
+			rectification_progress_month,
+			supervisor,
+			remark
+		) VALUES (
+			#{id},
+			#{createDate},
+			#{createBy.id},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{company.id},
+			#{code},
+			#{name},
+			#{source},
+			#{professional.id},
+			#{findTime},
+			#{hiddenDangerParent.id},
+			#{hiddenDanger.id},
+			#{dangerPosition},
+			#{dangerResume},
+			#{rating.id},
+			#{basis.id},
+			#{corrective},
+			#{personLiable},
+			#{office.id},
+			#{planDate},
+			#{completeDate},
+			#{completeSituation},
+			#{unClearDanger},
+			#{rectificationProgressMonth},
+			#{supervisor},
+			#{remark}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE danger_bank SET 	
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			company_id = #{company.id},
+			code = #{code},
+			name = #{name},
+			source = #{source},
+			professional_id = #{professional.id},
+			find_time = #{findTime},
+			hidden_danger_parent_id = #{hiddenDangerParent.id},
+			hidden_danger_id = #{hiddenDanger.id},
+			danger_position = #{dangerPosition},
+			danger_resume = #{dangerResume},
+			rating_id = #{rating.id},
+			basis_id = #{basis.id},
+			corrective = #{corrective},
+			person_liable = #{personLiable},
+			office_id = #{office.id},
+			plan_date = #{planDate},
+			complete_date = #{completeDate},
+			complete_situation = #{completeSituation},
+			un_clear_danger = #{unClearDanger},
+			rectification_progress_month = #{rectificationProgressMonth},
+			supervisor = #{supervisor},
+			remark = #{remark}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE danger_bank SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getDangerChartByCompanyId" resultType="DangerBank">
+		SELECT 
+		    count(0) AS count,
+		    company_id AS "company.id",
+		    o.name AS "company.name"
+		FROM
+		    danger_bank d,
+		    sys_office o
+		where
+			d.del_flag = '0'
+		    AND d.company_id = o.id
+		group by d.company_id;
+	</select>
+	
+	<select id="getChartByHiddenDangerParentId" resultType="DangerBank">
+		SELECT 
+		    count(0) AS count,
+		    hidden_danger_parent_id AS "hiddenDangerParent.id",
+		    h.name AS "hiddenDangerParent.name"
+		FROM
+		    danger_bank d,
+		    hidden_danger h
+		where
+			d.del_flag = '0'
+		    AND d.hidden_danger_parent_id = h.id
+		group by d.hidden_danger_parent_id;
+	</select>
+	
+	<select id="getChartByHiddenDangerId" resultType="DangerBank">
+		SELECT 
+		    count(0) AS count,
+		    hidden_danger_id AS "hiddenDanger.id",
+		    h.name AS "hiddenDanger.name"
+		FROM
+		    danger_bank d,
+		    hidden_danger h
+		where
+			d.del_flag = '0'
+		    AND d.hidden_danger_id = h.id
+		group by d.hidden_danger_id;
+	</select>
+	
+	<select id="getDangerChartByHiddenDanger" resultType="DangerBank">
+		SELECT 
+		    count(0) AS count,
+		    company_id AS "company.id",
+		    o.name AS "company.name"
+		FROM
+		    danger_bank d,
+		    sys_office o
+		<where>
+			d.del_flag = '0'
+			AND d.company_id = o.id
+			<if test="hiddenDangerParent != null and hiddenDangerParent.id != null and hiddenDangerParent.id != ''">
+				AND d.hidden_danger_parent_id = #{hiddenDangerParent.id}
+			</if>
+			<if test="hiddenDanger != null and hiddenDanger.id != null and hiddenDanger.id != ''">
+				AND d.hidden_danger_id = #{hiddenDanger.id}
+			</if>
+		</where>
+		group by d.company_id;
+	</select>
+	
+	<select id="getDangerChartByFindTime" resultType="DangerBank">
+		SELECT 
+		    count(0) AS count,
+		    date_format(a.find_time, '%Y-%m') year
+		FROM
+		    danger_bank a
+		where 
+			a.del_flag = '0' 
+		    AND a.find_time like CONCAT(#{year},'%')
+		group by date_format(a.find_time, '%Y-%m')
+	</select>
+	
+	<select id="getDangerChartByRating" resultType="DangerBank">
+		SELECT
+		    COUNT(0) COUNT,
+		    a.rating_id,
+		    r.name "rating.name"
+		FROM
+		    danger_bank a,
+		    rating r
+		WHERE
+		    a.del_flag = '0'
+		AND a.rating_id=r.id
+		GROUP BY
+		    a.rating_id;
+	</select>
+	
+</mapper>

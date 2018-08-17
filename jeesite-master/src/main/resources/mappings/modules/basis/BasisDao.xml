@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.basis.dao.BasisDao">
+    
+	<sql id="basisColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.sort AS "sort",
+		a.parent_id AS "parent.id",
+		a.parent_ids AS "parentIds",
+		a.grade AS "grade",
+		a.create_date AS "createDate",
+		a.create_by AS "createBy.id",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.del_flag AS "delFlag",
+		a.content AS "content",
+		p.name AS "parent.name"
+	</sql>
+	
+	<sql id="basisJoins">
+		LEFT JOIN basis p ON p.id = a.parent_id
+	</sql>
+    
+    <select id="findByParentIdsLike" resultType="Office">
+		SELECT
+			<include refid="basisColumns"/>
+		FROM basis a
+		<include refid="basisJoins"/>
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL} AND a.parent_ids LIKE #{parentIds}
+		ORDER BY a.sort
+	</select>
+    
+	<select id="get" resultType="Basis">
+		SELECT 
+			<include refid="basisColumns"/>
+		FROM basis a
+		<include refid="basisJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="Basis">
+		SELECT 
+			<include refid="basisColumns"/>
+		FROM basis a
+		<include refid="basisJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="parentIds != null and parentIds != ''">
+				AND a.parent_ids LIKE concat(#{parentIds},#{id},',%')
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.sort
+<!-- 				ORDER BY a.update_date DESC -->
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="Basis">
+		SELECT 
+			<include refid="basisColumns"/>
+		FROM basis a
+		<include refid="basisJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO basis(
+			id,
+			name,
+			sort,
+			parent_id,
+			parent_ids,
+			grade,
+			create_date,
+			create_by,
+			update_by,
+			update_date,
+			del_flag,
+			content
+		) VALUES (
+			#{id},
+			#{name},
+			#{sort},
+			#{parent.id},
+			#{parentIds},
+			#{grade},
+			#{createDate},
+			#{createBy.id},
+			#{updateBy.id},
+			#{updateDate},
+			#{delFlag},
+			#{content}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE basis SET 	
+			name = #{name},
+			sort = #{sort},
+			content = #{content}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE basis SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id} OR parent_ids LIKE CONCAT('%,', #{id}, ',%')
+	</update>
+	
+	<update id="updateParentIds">
+		UPDATE sys_office SET 
+			parent_id = #{parent.id}, 
+			parent_ids = #{parentIds}
+		WHERE id = #{id}
+	</update>
+</mapper>
